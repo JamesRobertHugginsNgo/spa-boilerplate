@@ -4,6 +4,7 @@ import gulpAutoPrefixer from 'gulp-autoprefixer';
 import gulpBabel from 'gulp-babel';
 import gulpCleanCss from 'gulp-clean-css';
 import gulpDependents from 'gulp-dependents';
+import gulpHtmlMin from 'gulp-htmlmin';
 import gulpPreProcess from 'gulp-preprocess';
 import gulpRename from 'gulp-rename';
 import gulpSass from 'gulp-sass';
@@ -136,12 +137,14 @@ function build_main_app_complete_js() {
 function build_main_app_complete_html() {
 	let result = Gulp.src('temp/build_main/app.html');
 	for (const file of FILES) {
-		result = result
-			.pipe(gulpRename((path) => {
-				path.extname = Path.extname(file);
-				path.basename = Path.basename(file, path.extname);
-			}))
-			.pipe(Gulp.dest(Path.join('dist', FOLDER)));
+		result = result.pipe(gulpRename((path) => {
+			path.extname = Path.extname(file);
+			path.basename = Path.basename(file, path.extname);
+		}));
+		if (MINIFY) {
+			result = result.pipe(gulpHtmlMin({ collapseWhitespace: true }));
+		}
+		result = result.pipe(Gulp.dest(Path.join('dist', FOLDER)));
 	}
 	return result;
 }
