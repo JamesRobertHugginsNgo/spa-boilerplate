@@ -14,7 +14,7 @@ import Path from 'path';
 import sass from 'sass';
 import webPackStream from 'webpack-stream';
 
-const FILES = ['index.html', 'about.html'];
+const FILES = ['index.html'];
 const FOLDER = '/webapp/web-project-boilerplate/';
 const MINIFY = true;
 
@@ -157,9 +157,14 @@ const build_main_app = Gulp.series(
 	build_main_app_complete
 );
 
-function build_main_asset() {
-	return Promise.resolve(); // TODO
+function build_main_asset_svg() {
+	return Gulp.src('src/**/*.svg')
+		.pipe(Gulp.dest(Path.join('dist', FOLDER)));
 }
+
+const build_main_asset = Gulp.parallel(
+	build_main_asset_svg
+);
 
 const build_main = Gulp.parallel(
 	build_main_app,
