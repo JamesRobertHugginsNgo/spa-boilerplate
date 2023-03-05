@@ -3,6 +3,7 @@ import Gulp from 'gulp';
 import gulpAutoPrefixer from 'gulp-autoprefixer';
 import gulpBabel from 'gulp-babel';
 import gulpCleanCss from 'gulp-clean-css';
+import gulpConnect from 'gulp-connect';
 import gulpDependents from 'gulp-dependents';
 import gulpHtmlMin from 'gulp-htmlmin';
 import gulpPreProcess from 'gulp-preprocess';
@@ -122,7 +123,9 @@ function build_main_app_complete_css() {
 	if (MINIFY) {
 		result = result.pipe(gulpCleanCss());
 	}
-	return result.pipe(Gulp.dest('dist'));
+	return result
+		.pipe(Gulp.dest('dist'))
+		.pipe(gulpConnect.reload());
 }
 
 function build_main_app_complete_js() {
@@ -131,7 +134,9 @@ function build_main_app_complete_js() {
 	if (MINIFY) {
 		result = result.pipe(gulpUglify());
 	}
-	return result.pipe(Gulp.dest('dist'));
+	return result
+		.pipe(Gulp.dest('dist'))
+		.pipe(gulpConnect.reload());
 }
 
 function build_main_app_complete_html() {
@@ -144,7 +149,9 @@ function build_main_app_complete_html() {
 		if (MINIFY) {
 			result = result.pipe(gulpHtmlMin({ collapseWhitespace: true }));
 		}
-		result = result.pipe(Gulp.dest(Path.join('dist', FOLDER)));
+		result = result
+			.pipe(Gulp.dest(Path.join('dist', FOLDER)))
+			.pipe(gulpConnect.reload());
 	}
 	return result;
 }
@@ -162,7 +169,8 @@ const build_main_app = Gulp.series(
 
 function build_main_asset_svg() {
 	return Gulp.src('src/**/*.svg')
-		.pipe(Gulp.dest(Path.join('dist', FOLDER)));
+		.pipe(Gulp.dest(Path.join('dist', FOLDER)))
+		.pipe(gulpConnect.reload());
 }
 
 const build_main_asset = Gulp.parallel(
@@ -196,5 +204,14 @@ function _watch() {
 }
 
 export const watch = Gulp.series(build, _watch);
+
+function _serve() {
+	gulpConnect.server({
+    root: 'dist',
+    livereload: true
+  });
+}
+
+export const serve = Gulp.series(build, _serve, _watch);
 
 export default build;
