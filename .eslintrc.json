@@ -1,0 +1,40 @@
+{
+    "env": {
+        "commonjs": true,
+        "es2021": true,
+        "node": true
+    },
+    "extends": "eslint:recommended",
+    "ignorePatterns": [
+        "dist/*",
+        "temp/*"
+    ],
+    "overrides": [
+        {
+            "env": {
+                "commonjs": false
+            },
+            "files": [
+                "**/*.mjs"
+            ],
+            "parserOptions": {
+                "sourceType": "module"
+            }
+        },
+        {
+            "env": {
+                "browser": true,
+                "commonjs": false,
+                "node": false
+            },
+            "files": [
+                "src/**/*.js",
+                "src/**/*.mjs"
+            ]
+        }
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "rules": {}
+}
