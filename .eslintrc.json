@@ -36,5 +36,7 @@
     "parserOptions": {
         "ecmaVersion": "latest"
     },
-    "rules": {}
+    "rules": {
+        "semi": "warn"
+    }
 }
