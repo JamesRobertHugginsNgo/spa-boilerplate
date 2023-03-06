@@ -1,4 +1,5 @@
 import { deleteAsync } from "del";
+import detectPort from "detect-port";
 import Gulp from 'gulp';
 import gulpAutoPrefixer from 'gulp-autoprefixer';
 import gulpBabel from 'gulp-babel';
@@ -12,16 +13,25 @@ import gulpSass from 'gulp-sass';
 import gulpUglify from 'gulp-uglify';
 import gulpUseRef from 'gulp-useref';
 import lazyPipe from 'lazypipe';
+import open from 'open';
 import Path from 'path';
 import sass from 'sass';
 import webPackStream from 'webpack-stream';
 
-const FILES = ['index.html'];
-const FOLDER = '/webapp/web-project-boilerplate/';
-const MINIFY = true;
+const APP_FILES = ['index.html'];
+const APP_FOLDER = 'webapp/web-project-boilerplate';
+
+const DEST_DIST = 'dist';
+const DEST_BUILD = 'temp';
+const DEST_BUILD_PREP = Path.join(DEST_BUILD, 'build_prep');
+const DEST_BUILD_MAIN = Path.join(DEST_BUILD, 'build_main');
+
+const ESM_ENTRY = 'scripts/entry.mjs';
+
+const MINIFY = false;
 
 function clean() {
-	return deleteAsync(['dist', 'temp']);
+	return deleteAsync([DEST_DIST, DEST_BUILD]);
 }
 
 const preProcessPipe = lazyPipe()
@@ -32,7 +42,7 @@ const preProcessPipe = lazyPipe()
 				const baseName = Path.basename(fileName, extName);
 				const dirName = Path.dirname(fileName);
 				const cacheBuster = new Date().getTime().toString(32);
-				const path = Path.join(FOLDER, dirName, `${baseName}-${cacheBuster}${extName}`);
+				const path = Path.join('/', APP_FOLDER, dirName, `${baseName}-${cacheBuster}${extName}`);
 				return `<!-- build:${type} ${path} -->`;
 			},
 
@@ -43,7 +53,7 @@ const preProcessPipe = lazyPipe()
 function build_prep_css() {
 	return Gulp.src('src/**/*.css', { since: Gulp.lastRun(build_prep_css) })
 		.pipe(preProcessPipe())
-		.pipe(Gulp.dest('temp/build_prep'));
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 const sassPipe = lazyPipe()
@@ -57,7 +67,7 @@ function build_prep_sass() {
 		.pipe(gulpRename((path) => {
 			path.extname = '.sass';
 		}))
-		.pipe(Gulp.dest('temp/build_prep'));
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 function build_prep_scss() {
@@ -66,29 +76,33 @@ function build_prep_scss() {
 		.pipe(gulpRename((path) => {
 			path.extname = '.scss';
 		}))
-		.pipe(Gulp.dest('temp/build_prep'));
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 function build_prep_js() {
 	return Gulp.src('src/**/*.js', { since: Gulp.lastRun(build_prep_js) })
 		.pipe(preProcessPipe())
-		.pipe(Gulp.dest('temp/build_prep'));
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 function build_prep_mjs_prep() {
 	return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(build_prep_mjs_prep) })
 		.pipe(preProcessPipe())
-		.pipe(Gulp.dest('temp/build_prep'));
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 function build_prep_mjs_webpack() {
-	return Gulp.src('temp/build_prep/scripts/entry.mjs')
+	if (!ESM_ENTRY) {
+		return Promise.resolve();
+	}
+
+	return Gulp.src(Path.join(DEST_BUILD_PREP, ESM_ENTRY), { allowEmpty: true })
 		.pipe(webPackStream({}))
 		.pipe(gulpRename((path) => {
-			path.basename = 'entry';
-			path.extname = '.mjs';
+			path.extname = Path.extname(ESM_ENTRY);
+			path.basename = Path.basename(ESM_ENTRY, path.extname);
 		}))
-		.pipe(Gulp.dest('temp/build_prep/scripts/'));
+		.pipe(Gulp.dest(Path.join(DEST_BUILD_PREP, 'scripts')));
 }
 
 const build_prep_ejs = Gulp.series(
@@ -99,7 +113,7 @@ const build_prep_ejs = Gulp.series(
 function build_prep_html() {
 	return Gulp.src('src/**/*.html', { since: Gulp.lastRun(build_prep_html) })
 		.pipe(preProcessPipe())
-		.pipe(Gulp.dest('temp/build_prep'));
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 const build_prep = Gulp.parallel(
@@ -112,9 +126,9 @@ const build_prep = Gulp.parallel(
 );
 
 function build_main_app_main() {
-	return Gulp.src('temp/build_prep/app.html')
+	return Gulp.src(Path.join(DEST_BUILD_PREP, 'app.html'))
 		.pipe(gulpUseRef())
-		.pipe(Gulp.dest('temp/build_main'));
+		.pipe(Gulp.dest(DEST_BUILD_MAIN));
 }
 
 function build_main_app_complete_css() {
@@ -124,7 +138,7 @@ function build_main_app_complete_css() {
 		result = result.pipe(gulpCleanCss());
 	}
 	return result
-		.pipe(Gulp.dest('dist'))
+		.pipe(Gulp.dest(DEST_DIST))
 		.pipe(gulpConnect.reload());
 }
 
@@ -135,22 +149,23 @@ function build_main_app_complete_js() {
 		result = result.pipe(gulpUglify());
 	}
 	return result
-		.pipe(Gulp.dest('dist'))
+		.pipe(Gulp.dest(DEST_DIST))
 		.pipe(gulpConnect.reload());
 }
 
 function build_main_app_complete_html() {
 	let result = Gulp.src('temp/build_main/app.html');
-	for (const file of FILES) {
+	for (const file of APP_FILES) {
 		result = result.pipe(gulpRename((path) => {
 			path.extname = Path.extname(file);
 			path.basename = Path.basename(file, path.extname);
+			path.dirname = Path.dirname(file);
 		}));
 		if (MINIFY) {
 			result = result.pipe(gulpHtmlMin({ collapseWhitespace: true }));
 		}
 		result = result
-			.pipe(Gulp.dest(Path.join('dist', FOLDER)))
+			.pipe(Gulp.dest(Path.join(DEST_DIST, APP_FOLDER)))
 			.pipe(gulpConnect.reload());
 	}
 	return result;
@@ -169,7 +184,7 @@ const build_main_app = Gulp.series(
 
 function build_main_asset_svg() {
 	return Gulp.src('src/**/*.svg')
-		.pipe(Gulp.dest(Path.join('dist', FOLDER)))
+		.pipe(Gulp.dest(Path.join(DEST_DIST, APP_FOLDER)))
 		.pipe(gulpConnect.reload());
 }
 
@@ -206,10 +221,17 @@ function _watch() {
 export const watch = Gulp.series(build, _watch);
 
 function _serve() {
-	gulpConnect.server({
-    root: 'dist',
-    livereload: true
-  });
+	return detectPort(9000)
+		.then((port) => {
+			gulpConnect.server({
+				root: DEST_DIST,
+				port,
+				livereload: true
+			});
+
+			open(`http://localhost:${port}`);
+		});
+
 }
 
 export const serve = Gulp.series(build, _serve, _watch);

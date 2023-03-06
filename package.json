@@ -21,6 +21,7 @@
     "@babel/core": "^7.21.0",
     "@babel/preset-env": "^7.20.2",
     "del": "^7.0.0",
+    "detect-port": "^1.5.1",
     "eslint": "^8.35.0",
     "gulp": "^4.0.2",
     "gulp-autoprefixer": "^8.0.0",
@@ -35,6 +36,7 @@
     "gulp-uglify": "^3.0.2",
     "gulp-useref": "^5.0.0",
     "lazypipe": "^1.0.2",
+    "open": "^8.4.2",
     "sass": "^1.58.3",
     "webpack-stream": "^7.0.0"
   }
