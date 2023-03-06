@@ -40,5 +40,10 @@
     "sass": "^1.58.3",
     "vinyl-named": "^1.1.0",
     "webpack-stream": "^7.0.0"
+  },
+  "dependencies": {
+    "backbone": "^1.4.1",
+    "jquery": "^3.6.3",
+    "underscore": "^1.13.6"
   }
 }

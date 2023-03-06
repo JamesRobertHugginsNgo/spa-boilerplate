@@ -23,16 +23,15 @@ const APP_FILES = ['index.html'];
 const APP_FOLDER = 'webapp/web-project-boilerplate';
 
 const DEST_DIST = 'dist';
-const DEST_BUILD = 'temp';
-const DEST_BUILD_PREP = Path.join(DEST_BUILD, 'build_prep');
-const DEST_BUILD_MAIN = Path.join(DEST_BUILD, 'build_main');
+const DEST_BUILD_PREP = 'temp_build_prep';
+const DEST_BUILD_MAIN = 'temp_build_main';
 
 const ESM_ENTRY_POINTS = ['scripts/entry.mjs', 'scripts/app.mjs'];
 
 const MINIFY = true;
 
 export function clean() {
-	return deleteAsync([DEST_DIST, DEST_BUILD]);
+	return deleteAsync([DEST_DIST, DEST_BUILD_PREP, DEST_BUILD_MAIN]);
 }
 
 const preProcessPipe = lazyPipe()
@@ -103,7 +102,7 @@ function build_prep_mjs_webpack() {
 	return Gulp.src(ESM_ENTRY_POINTS.map((entryPoint) => {
 		return Path.join(DEST_BUILD_PREP, entryPoint);
 	}))
-		.pipe(vinylNamed(function(file) {
+		.pipe(vinylNamed(function (file) {
 			const name = (nameCounter++).toString();
 			metadata[name] = {
 				dirname: Path.relative(Path.join(process.cwd(), DEST_BUILD_PREP), file.dirname),
@@ -144,14 +143,14 @@ const build_prep = Gulp.parallel(
 	build_prep_html
 );
 
-function build_main_app_main() {
+function build_main_main() {
 	return Gulp.src(Path.join(DEST_BUILD_PREP, 'app.html'))
 		.pipe(gulpUseRef())
 		.pipe(Gulp.dest(DEST_BUILD_MAIN));
 }
 
-function build_main_app_complete_css() {
-	let result = Gulp.src('temp/build_main/**/*.css')
+function build_main_complete_css() {
+	let result = Gulp.src(Path.join(DEST_BUILD_MAIN, '**/*.css'))
 		.pipe(gulpAutoPrefixer());
 	if (MINIFY) {
 		result = result.pipe(gulpCleanCss());
@@ -161,8 +160,8 @@ function build_main_app_complete_css() {
 		.pipe(gulpConnect.reload());
 }
 
-function build_main_app_complete_js() {
-	let result = Gulp.src('temp/build_main/**/*.js')
+function build_main_complete_js() {
+	let result = Gulp.src(Path.join(DEST_BUILD_MAIN, '**/*.js'))
 		.pipe(gulpBabel());
 	if (MINIFY) {
 		result = result.pipe(gulpUglify());
@@ -172,8 +171,8 @@ function build_main_app_complete_js() {
 		.pipe(gulpConnect.reload());
 }
 
-function build_main_app_complete_html() {
-	let result = Gulp.src('temp/build_main/app.html');
+function build_main_complete_html() {
+	let result = Gulp.src(Path.join(DEST_BUILD_MAIN, 'app.html'));
 	for (const file of APP_FILES) {
 		result = result.pipe(gulpRename((path) => {
 			path.extname = Path.extname(file);
@@ -190,40 +189,40 @@ function build_main_app_complete_html() {
 	return result;
 }
 
-const build_main_app_complete = Gulp.parallel(
-	build_main_app_complete_css,
-	build_main_app_complete_js,
-	build_main_app_complete_html
+const build_main_complete = Gulp.parallel(
+	build_main_complete_css,
+	build_main_complete_js,
+	build_main_complete_html
 );
 
-const build_main_app = Gulp.series(
-	build_main_app_main,
-	build_main_app_complete
+const build_main = Gulp.series(
+	build_main_main,
+	build_main_complete
 );
 
-function build_main_asset_svg() {
-	return Gulp.src('src/**/*.svg')
-		.pipe(Gulp.dest(Path.join(DEST_DIST, APP_FOLDER)))
-		.pipe(gulpConnect.reload());
-}
-
-const build_main_asset = Gulp.parallel(
-	build_main_asset_svg
-);
-
-const build_main = Gulp.parallel(
-	build_main_app,
-	build_main_asset
-);
+// const build_main = Gulp.parallel(
+// 	build_main_app
+// );
 
 const _build = Gulp.series(
 	build_prep,
 	build_main
 );
 
+function build_asset_svg() {
+	return Gulp.src('src/**/*.svg')
+		.pipe(Gulp.dest(Path.join(DEST_DIST, APP_FOLDER)))
+		.pipe(gulpConnect.reload());
+}
+
+const build_asset = Gulp.parallel(
+	build_asset_svg
+);
+
 export const build = Gulp.series(
 	clean,
-	_build
+	_build,
+	build_asset
 );
 
 function _watch() {

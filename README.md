@@ -5,7 +5,7 @@
 ### App
 
 ```
-npm install --save
+npm install --save backbone jquery
 ```
 
 ### Dev
