@@ -28,7 +28,7 @@ const DEST_BUILD_MAIN = Path.join(DEST_BUILD, 'build_main');
 
 const ESM_ENTRY = 'scripts/entry.mjs';
 
-const MINIFY = false;
+const MINIFY = true;
 
 function clean() {
 	return deleteAsync([DEST_DIST, DEST_BUILD]);
@@ -229,7 +229,7 @@ function _serve() {
 				livereload: true
 			});
 
-			open(`http://localhost:${port}`);
+			open(`http://localhost:${port}/${Path.join(APP_FOLDER, APP_FILES[0])}`);
 		});
 
 }
