@@ -1,0 +1,1 @@
+"use strict";console.log("Hello World"),console.log("Hello Universe"),console.log("Hello Galaxy","Hello Universe");

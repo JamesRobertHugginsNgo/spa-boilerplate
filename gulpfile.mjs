@@ -16,6 +16,7 @@ import lazyPipe from 'lazypipe';
 import open from 'open';
 import Path from 'path';
 import sass from 'sass';
+import vinylNamed from 'vinyl-named';
 import webPackStream from 'webpack-stream';
 
 const APP_FILES = ['index.html'];
@@ -26,11 +27,11 @@ const DEST_BUILD = 'temp';
 const DEST_BUILD_PREP = Path.join(DEST_BUILD, 'build_prep');
 const DEST_BUILD_MAIN = Path.join(DEST_BUILD, 'build_main');
 
-const ESM_ENTRY = 'scripts/entry.mjs';
+const ESM_ENTRY_POINTS = ['scripts/entry.mjs', 'scripts/app.mjs'];
 
 const MINIFY = true;
 
-function clean() {
+export function clean() {
 	return deleteAsync([DEST_DIST, DEST_BUILD]);
 }
 
@@ -92,17 +93,35 @@ function build_prep_mjs_prep() {
 }
 
 function build_prep_mjs_webpack() {
-	if (!ESM_ENTRY) {
+	if (!ESM_ENTRY_POINTS || ESM_ENTRY_POINTS.length === 0) {
 		return Promise.resolve();
 	}
 
-	return Gulp.src(Path.join(DEST_BUILD_PREP, ESM_ENTRY), { allowEmpty: true })
-		.pipe(webPackStream({}))
-		.pipe(gulpRename((path) => {
-			path.extname = Path.extname(ESM_ENTRY);
-			path.basename = Path.basename(ESM_ENTRY, path.extname);
+	let nameCounter = 0;
+	const metadata = {};
+
+	return Gulp.src(ESM_ENTRY_POINTS.map((entryPoint) => {
+		return Path.join(DEST_BUILD_PREP, entryPoint);
+	}))
+		.pipe(vinylNamed(function(file) {
+			const name = (nameCounter++).toString();
+			metadata[name] = {
+				dirname: Path.relative(Path.join(process.cwd(), DEST_BUILD_PREP), file.dirname),
+				basename: file.stem,
+				extname: file.extname
+			};
+			return name;
 		}))
-		.pipe(Gulp.dest(Path.join(DEST_BUILD_PREP, 'scripts')));
+		.pipe(webPackStream({
+			mode: MINIFY ? 'production' : 'development'
+		}))
+		.pipe(gulpRename((path) => {
+			const _metadata = metadata[path.basename];
+			path.dirname = _metadata.dirname;
+			path.basename = _metadata.basename;
+			path.extname = _metadata.extname;
+		}))
+		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
 const build_prep_ejs = Gulp.series(
