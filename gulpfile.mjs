@@ -19,7 +19,7 @@ import sass from 'sass';
 import vinylNamed from 'vinyl-named';
 import webPackStream from 'webpack-stream';
 
-const APP_FILES = ['index.html'];
+const APP_FILES = ['index.html', 'about.html'];
 const APP_FOLDER = 'webapp/web-project-boilerplate';
 
 const DEST_DIST = 'dist';
@@ -34,20 +34,29 @@ export function clean() {
 	return deleteAsync([DEST_DIST, DEST_BUILD_PREP, DEST_BUILD_MAIN]);
 }
 
+const preProcessContext = {
+	makeOpenBuildTag: (type, fileName) => {
+		const extName = Path.extname(fileName);
+		const baseName = Path.basename(fileName, extName);
+		const dirName = Path.dirname(fileName);
+		const cacheBuster = new Date().getTime().toString(32);
+		const path = Path.join('/', APP_FOLDER, dirName, `${baseName}-${cacheBuster}${extName}`);
+		return `<!-- build:${type} ${path} -->`;
+	},
+
+	APP: 'WEB PROJECT BOILERPLATE',
+	APP_FOLDER
+};
+
 const preProcessPipe = lazyPipe()
 	.pipe(gulpPreProcess, {
-		context: {
-			makeOpenBuildTag: (type, fileName) => {
-				const extName = Path.extname(fileName);
-				const baseName = Path.basename(fileName, extName);
-				const dirName = Path.dirname(fileName);
-				const cacheBuster = new Date().getTime().toString(32);
-				const path = Path.join('/', APP_FOLDER, dirName, `${baseName}-${cacheBuster}${extName}`);
-				return `<!-- build:${type} ${path} -->`;
-			},
+		context: preProcessContext
+	});
 
-			APP: 'WEB PROJECT BOILERPLATE'
-		}
+const preProcessPipeEsm = lazyPipe()
+	.pipe(gulpPreProcess, {
+		context: preProcessContext,
+		extension: 'js'
 	});
 
 function build_prep_css() {
@@ -87,7 +96,7 @@ function build_prep_js() {
 
 function build_prep_mjs_prep() {
 	return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(build_prep_mjs_prep) })
-		.pipe(preProcessPipe())
+		.pipe(preProcessPipeEsm())
 		.pipe(Gulp.dest(DEST_BUILD_PREP));
 }
 
@@ -199,10 +208,6 @@ const build_main = Gulp.series(
 	build_main_main,
 	build_main_complete
 );
-
-// const build_main = Gulp.parallel(
-// 	build_main_app
-// );
 
 const _build = Gulp.series(
 	build_prep,
