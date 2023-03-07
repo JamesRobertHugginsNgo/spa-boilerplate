@@ -152,7 +152,7 @@ const build_prep = Gulp.parallel(
 	build_prep_html
 );
 
-function build_main_main() {
+function build_main_prep() {
 	return Gulp.src(Path.join(DEST_BUILD_PREP, 'app.html'))
 		.pipe(gulpUseRef())
 		.pipe(Gulp.dest(DEST_BUILD_MAIN));
@@ -205,7 +205,7 @@ const build_main_complete = Gulp.parallel(
 );
 
 const build_main = Gulp.series(
-	build_main_main,
+	build_main_prep,
 	build_main_complete
 );
 
