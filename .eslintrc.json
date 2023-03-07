@@ -7,8 +7,8 @@
     "extends": "eslint:recommended",
     "ignorePatterns": [
         "dist/*",
-        "temp_build_main/*",
-        "temp_build_prep/*"
+        "temp_next/*",
+        "temp_prep/*"
     ],
     "overrides": [
         {

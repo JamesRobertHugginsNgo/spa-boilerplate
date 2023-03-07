@@ -1,4 +1,4 @@
-node_modules
-temp_build_main
-temp_build_prep
 .DS_Store
+node_modules
+temp_next
+temp_prep
