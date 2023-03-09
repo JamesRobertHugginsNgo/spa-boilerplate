@@ -1,4 +1,4 @@
-# web-project-boilerplate
+# spa-boilerplate
 
 ## Dependency
 

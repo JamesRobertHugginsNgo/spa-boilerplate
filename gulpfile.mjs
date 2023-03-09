@@ -30,7 +30,7 @@ const IS_BUILD_ENV_LOCAL = BUILD_ENV !== BUILD_ENV_DEV && BUILD_ENV !== BUILD_EN
 ////////////////////////////////////////////////////////////////////////////////
 
 const APP_FILES = ['index.html', 'about.html'];
-const APP_FOLDER = IS_BUILD_ENV_LOCAL ? '' : 'webapp/web-project-boilerplate';
+const APP_FOLDER = IS_BUILD_ENV_LOCAL ? '' : 'webapp/spa-boilerplate';
 
 const DEST_DIST = 'dist';
 const DEST_BUILD_PREP = 'temp_prep';
@@ -41,7 +41,7 @@ const ESM_ENTRY_POINTS = ['scripts/entry.mjs', 'scripts/app.mjs'];
 const MINIFY = BUILD_ENV === BUILD_ENV_QA || BUILD_ENV !== BUILD_ENV_PROD;
 
 const PRE_PROCESS_CONTEXT = {
-	APP: 'WEB PROJECT BOILERPLATE',
+	APP: 'SPA BOILERPLATE',
 	APP_FOLDER,
 
 	// ALL ENV
