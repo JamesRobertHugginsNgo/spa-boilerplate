@@ -1,4 +1,5 @@
 .DS_Store
+.vscode
 node_modules
 temp_next
 temp_prep

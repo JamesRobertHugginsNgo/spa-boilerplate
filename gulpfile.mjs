@@ -26,12 +26,11 @@ const BUILD_ENV = process.env.BUILD_ENV;
 const BUILD_ENV_DEV = 'DEV';
 const BUILD_ENV_QA = 'QA';
 const BUILD_ENV_PROD = 'PROD';
-const IS_BUILD_ENV_LOCAL = BUILD_ENV !== BUILD_ENV_DEV && BUILD_ENV !== BUILD_ENV_QA && BUILD_ENV !== BUILD_ENV_PROD;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const APP_FILES = ['index.html', 'about.html'];
-const APP_FOLDER = IS_BUILD_ENV_LOCAL ? '' : 'webapp/spa-boilerplate';
+const APP_FOLDER = 'webapp/spa-boilerplate';
 
 const DEST_DIST = 'dist';
 const DEST_BUILD_PREP = 'temp_prep';
@@ -45,7 +44,7 @@ const PRE_PROCESS_CONTEXT = {
 
 	// ALL ENV
 
-	...IS_BUILD_ENV_LOCAL ? {
+	...BUILD_ENV !== BUILD_ENV_DEV && BUILD_ENV !== BUILD_ENV_QA && BUILD_ENV !== BUILD_ENV_PROD ? {
 
 		// LOCAL ENV
 
