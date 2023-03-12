@@ -21,40 +21,30 @@ import webPackStream from 'webpack-stream';
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const BUILD_ENV = process.env.BUILD_ENV;
+const APP_FOLDER = 'webapp/spa-boilerplate/';
+const APP_FILES = ['index.html', 'about.html', 'html/app.html'];
 
-const BUILD_ENV_DEV = 'DEV';
-const BUILD_ENV_QA = 'QA';
-const BUILD_ENV_PROD = 'PROD';
-
-////////////////////////////////////////////////////////////////////////////////
-
-const APP_FILES = ['index.html', 'about.html'];
-const APP_FOLDER = 'webapp/spa-boilerplate';
-
-const MINIFY = BUILD_ENV === BUILD_ENV_QA || BUILD_ENV === BUILD_ENV_PROD;
-
-const PRE_PROCESS_CONTEXT = {
+const CONTEXT = {
 	APP: 'SPA BOILERPLATE',
 	APP_FOLDER,
 
 	// ALL ENV
 
-	...BUILD_ENV !== BUILD_ENV_DEV && BUILD_ENV !== BUILD_ENV_QA && BUILD_ENV !== BUILD_ENV_PROD ? {
+	...process.env.BUILD_ENV === 'PROD' ? {
 
-		// LOCAL ENV
+		// PROD ENV
 
-	} : BUILD_ENV === BUILD_ENV_DEV ? {
-
-		// DEV ENV
-
-	} : BUILD_ENV === BUILD_ENV_QA ? {
+	} : process.env.BUILD_ENV === 'QA' ? {
 
 		// QA ENV
 
+	} : process.env.BUILD_ENV === 'DEV' ? {
+
+		// DEV ENV
+
 	} : {
 
-		// PROD ENV
+		// LOCAL ENV
 
 	},
 
@@ -73,7 +63,7 @@ const PRE_PROCESS_CONTEXT = {
 const sassPipe = lazyPipe()
 	.pipe(gulpDependents)
 	.pipe(gulpPreProcess, {
-		context: PRE_PROCESS_CONTEXT,
+		context: CONTEXT,
 		extension: 'css'
 	})
 	.pipe(gulpSass(sass));
@@ -81,23 +71,23 @@ const sassPipe = lazyPipe()
 const esmPipe = lazyPipe()
 	.pipe(() => {
 		return gulpIf('*.mjs', webPackStream({
-			mode: BUILD_ENV === BUILD_ENV_QA || BUILD_ENV === BUILD_ENV_PROD
+			mode: process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD'
 				? 'production'
 				: 'development'
 		}));
 	});
 
 let cssPipe = lazyPipe().pipe(gulpAutoPrefixer);
-if (MINIFY) {
+if (process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD') {
 	cssPipe = cssPipe.pipe(gulpCleanCss);
 }
-cssPipe = cssPipe.pipe(Gulp.dest, 'dist');
+cssPipe = cssPipe.pipe(Gulp.dest, 'dist/');
 
 let jsPipe = lazyPipe().pipe(gulpBabel);
-if (MINIFY) {
+if (process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD') {
 	jsPipe = jsPipe.pipe(gulpUglify);
 }
-jsPipe = jsPipe.pipe(Gulp.dest, 'dist');
+jsPipe = jsPipe.pipe(Gulp.dest, 'dist/');
 
 let htmlPipe = lazyPipe();
 for (const file of APP_FILES) {
@@ -106,17 +96,17 @@ for (const file of APP_FILES) {
 		path.basename = Path.basename(file, path.extname);
 		path.dirname = Path.dirname(file);
 	});
-	if (MINIFY) {
+	if (process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD') {
 		htmlPipe = htmlPipe.pipe(gulpHtmlMin, { collapseWhitespace: true });
 	}
-	htmlPipe = htmlPipe.pipe(Gulp.dest, Path.join('dist', APP_FOLDER));
+	htmlPipe = htmlPipe.pipe(Gulp.dest, Path.join('dist/', APP_FOLDER));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // CLEAN
 export function clean() {
-	return deleteAsync(['dist', 'temp']);
+	return deleteAsync(['dist/', 'temp/']);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,10 +121,10 @@ const _build = Gulp.series(
 		function _build_prep_css() {
 			return Gulp.src('src/**/*.css', { since: Gulp.lastRun(_build_prep_css) })
 				.pipe(gulpPreProcess({
-					context: PRE_PROCESS_CONTEXT,
+					context: CONTEXT,
 					extension: 'css'
 				}))
-				.pipe(Gulp.dest('temp'));
+				.pipe(Gulp.dest('temp/'));
 		},
 
 		// _BUILD PREP SASS
@@ -144,7 +134,7 @@ const _build = Gulp.series(
 				.pipe(gulpRename((path) => {
 					path.extname = '.sass';
 				}))
-				.pipe(Gulp.dest('temp'));
+				.pipe(Gulp.dest('temp/'));
 		},
 
 		// _BUILD PREP SCSS
@@ -154,37 +144,37 @@ const _build = Gulp.series(
 				.pipe(gulpRename((path) => {
 					path.extname = '.scss';
 				}))
-				.pipe(Gulp.dest('temp'));
+				.pipe(Gulp.dest('temp/'));
 		},
 
 		// _BUILD PREP JS
 		function _build_prep_js() {
 			return Gulp.src('src/**/*.js', { since: Gulp.lastRun(_build_prep_js) })
 				.pipe(gulpPreProcess({
-					context: PRE_PROCESS_CONTEXT,
+					context: CONTEXT,
 					extension: 'js'
 				}))
-				.pipe(Gulp.dest('temp'));
+				.pipe(Gulp.dest('temp/'));
 		},
 
 		// _BUILD PREP ESM
 		function _build_prep_esm() {
 			return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(_build_prep_esm) })
 				.pipe(gulpPreProcess({
-					context: PRE_PROCESS_CONTEXT,
+					context: CONTEXT,
 					extension: 'js'
 				}))
-				.pipe(Gulp.dest('temp'));
+				.pipe(Gulp.dest('temp/'));
 		},
 
 		// _BUILD PREP HTML
 		function _build_prep_html() {
 			return Gulp.src('src/**/*.html', { since: Gulp.lastRun(_build_prep_html) })
 				.pipe(gulpPreProcess({
-					context: PRE_PROCESS_CONTEXT,
+					context: CONTEXT,
 					extension: 'html'
 				}))
-				.pipe(Gulp.dest('temp'));
+				.pipe(Gulp.dest('temp/'));
 		}
 	),
 
@@ -193,7 +183,7 @@ const _build = Gulp.series(
 
 		// _BUILD NEXT APP
 		function _build_next_app() {
-			return Gulp.src(Path.join('temp', 'app.html'))
+			return Gulp.src(Path.join('temp/', 'app.html'))
 				.pipe(gulpUseRef({}, esmPipe))
 				.pipe(gulpIf('*.css', cssPipe()))
 				.pipe(gulpIf('*.js', jsPipe()))
@@ -207,7 +197,7 @@ const _build = Gulp.series(
 			// _BUILD NEXT ASSET SVG
 			function _build_next_asset_svg() {
 				return Gulp.src('src/**/*.svg')
-					.pipe(Gulp.dest(Path.join('dist', APP_FOLDER)))
+					.pipe(Gulp.dest(Path.join('dist/', APP_FOLDER)))
 					.pipe(gulpConnect.reload());
 			}
 		)
@@ -232,20 +222,21 @@ function _watch() {
 }
 
 // WATCH
-export const watch = Gulp.series(build, _watch);
+export const watch = Gulp.series(clean, _build, _watch);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // SERVE
 export const serve = Gulp.series(
-	build,
+	clean,
+	_build,
 
 	// SERVE APP
 	function _serve() {
 		return detectPort(9000)
 			.then((port) => {
 				gulpConnect.server({
-					root: 'dist',
+					root: 'dist/',
 					port,
 					livereload: true
 				});
