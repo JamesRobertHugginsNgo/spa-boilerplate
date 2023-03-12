@@ -7,7 +7,6 @@
     "extends": "eslint:recommended",
     "ignorePatterns": [
         "dist/*",
-        "temp_next/*",
         "temp/*"
     ],
     "overrides": [
