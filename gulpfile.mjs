@@ -7,6 +7,7 @@ import gulpCleanCss from 'gulp-clean-css';
 import gulpConnect from 'gulp-connect';
 import gulpDependents from 'gulp-dependents';
 import gulpHtmlMin from 'gulp-htmlmin';
+import gulpIf from 'gulp-if';
 import gulpPreProcess from 'gulp-preprocess';
 import gulpRename from 'gulp-rename';
 import gulpSass from 'gulp-sass';
@@ -16,12 +17,12 @@ import lazyPipe from 'lazypipe';
 import open from 'open';
 import Path from 'path';
 import sass from 'sass';
-import vinylNamed from 'vinyl-named';
 import webPackStream from 'webpack-stream';
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const BUILD_ENV = process.env.BUILD_ENV;
+
 const BUILD_ENV_DEV = 'DEV';
 const BUILD_ENV_QA = 'QA';
 const BUILD_ENV_PROD = 'PROD';
@@ -36,9 +37,7 @@ const DEST_DIST = 'dist';
 const DEST_BUILD_PREP = 'temp_prep';
 const DEST_BUILD_MAIN = 'temp_next';
 
-const ESM_ENTRY_POINTS = ['scripts/entry.mjs', 'scripts/app.mjs'];
-
-const MINIFY = BUILD_ENV === BUILD_ENV_QA || BUILD_ENV !== BUILD_ENV_PROD;
+const MINIFY = BUILD_ENV === BUILD_ENV_QA || BUILD_ENV === BUILD_ENV_PROD;
 
 const PRE_PROCESS_CONTEXT = {
 	APP: 'SPA BOILERPLATE',
@@ -90,6 +89,15 @@ const sassPipe = lazyPipe()
 	.pipe(preProcessPipe)
 	.pipe(gulpSass(sass));
 
+const esmPipe = lazyPipe()
+	.pipe(() => {
+		return gulpIf('*.mjs', webPackStream({
+			mode: BUILD_ENV === BUILD_ENV_QA || BUILD_ENV === BUILD_ENV_PROD
+				? 'production'
+				: 'development'
+		}));
+	});
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // CLEAN
@@ -139,51 +147,12 @@ const _build = Gulp.series(
 				.pipe(Gulp.dest(DEST_BUILD_PREP));
 		},
 
-		// _BUILD PREP ESM
-		Gulp.series(
-
-			// _BUILD PREP ESM PREP
-			function _build_prep_esm_prep() {
-				return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(_build_prep_esm_prep) })
-					.pipe(preProcessPipeMjs())
-					.pipe(Gulp.dest(DEST_BUILD_PREP));
-			},
-
-			// _BUILD PREP ESM WEBPACK
-			function _build_prep_esm_webpack() {
-				if (!ESM_ENTRY_POINTS || ESM_ENTRY_POINTS.length === 0) {
-					return Promise.resolve();
-				}
-
-				let nameCounter = 0;
-				const metadata = {};
-
-				return Gulp.src(ESM_ENTRY_POINTS.map((entryPoint) => {
-					return Path.join(DEST_BUILD_PREP, entryPoint);
-				}))
-					.pipe(vinylNamed(function (file) {
-						const name = (nameCounter++).toString();
-						metadata[name] = {
-							dirname: Path.relative(Path.join(process.cwd(), DEST_BUILD_PREP), file.dirname),
-							basename: file.stem,
-							extname: file.extname
-						};
-						return name;
-					}))
-					.pipe(webPackStream({
-						mode: BUILD_ENV === BUILD_ENV_QA || BUILD_ENV === BUILD_ENV_PROD
-							? 'production'
-							: 'development'
-					}))
-					.pipe(gulpRename((path) => {
-						const _metadata = metadata[path.basename];
-						path.dirname = _metadata.dirname;
-						path.basename = _metadata.basename;
-						path.extname = _metadata.extname;
-					}))
-					.pipe(Gulp.dest(DEST_BUILD_PREP));
-			}
-		),
+		// _BUILD PREP ESM PREP
+		function _build_prep_esm_prep() {
+			return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(_build_prep_esm_prep) })
+				.pipe(preProcessPipeMjs())
+				.pipe(Gulp.dest(DEST_BUILD_PREP));
+		},
 
 		// _BUILD PREP HTML
 		function _build_prep_html() {
@@ -202,7 +171,7 @@ const _build = Gulp.series(
 			// _BUILD NEXT APP PREP
 			function _build_next_app_prep() {
 				return Gulp.src(Path.join(DEST_BUILD_PREP, 'app.html'))
-					.pipe(gulpUseRef())
+					.pipe(gulpUseRef({}, esmPipe))
 					.pipe(Gulp.dest(DEST_BUILD_MAIN));
 			},
 
