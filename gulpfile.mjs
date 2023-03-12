@@ -32,10 +32,6 @@ const BUILD_ENV_PROD = 'PROD';
 const APP_FILES = ['index.html', 'about.html'];
 const APP_FOLDER = 'webapp/spa-boilerplate';
 
-const DEST_DIST = 'dist';
-const DEST_BUILD_PREP = 'temp_prep';
-const DEST_BUILD_MAIN = 'temp_next';
-
 const MINIFY = BUILD_ENV === BUILD_ENV_QA || BUILD_ENV === BUILD_ENV_PROD;
 
 const PRE_PROCESS_CONTEXT = {
@@ -74,18 +70,12 @@ const PRE_PROCESS_CONTEXT = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const preProcessPipe = lazyPipe().pipe(gulpPreProcess, {
-	context: PRE_PROCESS_CONTEXT
-});
-
-const preProcessPipeMjs = lazyPipe().pipe(gulpPreProcess, {
-	context: PRE_PROCESS_CONTEXT,
-	extension: 'js'
-});
-
 const sassPipe = lazyPipe()
 	.pipe(gulpDependents)
-	.pipe(preProcessPipe)
+	.pipe(gulpPreProcess, {
+		context: PRE_PROCESS_CONTEXT,
+		extension: 'css'
+	})
 	.pipe(gulpSass(sass));
 
 const esmPipe = lazyPipe()
@@ -97,11 +87,36 @@ const esmPipe = lazyPipe()
 		}));
 	});
 
+let cssPipe = lazyPipe().pipe(gulpAutoPrefixer);
+if (MINIFY) {
+	cssPipe = cssPipe.pipe(gulpCleanCss);
+}
+cssPipe = cssPipe.pipe(Gulp.dest, 'dist');
+
+let jsPipe = lazyPipe().pipe(gulpBabel);
+if (MINIFY) {
+	jsPipe = jsPipe.pipe(gulpUglify);
+}
+jsPipe = jsPipe.pipe(Gulp.dest, 'dist');
+
+let htmlPipe = lazyPipe();
+for (const file of APP_FILES) {
+	htmlPipe = htmlPipe.pipe(gulpRename, (path) => {
+		path.extname = Path.extname(file);
+		path.basename = Path.basename(file, path.extname);
+		path.dirname = Path.dirname(file);
+	});
+	if (MINIFY) {
+		htmlPipe = htmlPipe.pipe(gulpHtmlMin, { collapseWhitespace: true });
+	}
+	htmlPipe = htmlPipe.pipe(Gulp.dest, Path.join('dist', APP_FOLDER));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // CLEAN
 export function clean() {
-	return deleteAsync([DEST_DIST, DEST_BUILD_PREP, DEST_BUILD_MAIN]);
+	return deleteAsync(['dist', 'temp']);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,8 +130,11 @@ const _build = Gulp.series(
 		// _BUILD PREP CSS
 		function _build_prep_css() {
 			return Gulp.src('src/**/*.css', { since: Gulp.lastRun(_build_prep_css) })
-				.pipe(preProcessPipe())
-				.pipe(Gulp.dest(DEST_BUILD_PREP));
+				.pipe(gulpPreProcess({
+					context: PRE_PROCESS_CONTEXT,
+					extension: 'css'
+				}))
+				.pipe(Gulp.dest('temp'));
 		},
 
 		// _BUILD PREP SASS
@@ -126,7 +144,7 @@ const _build = Gulp.series(
 				.pipe(gulpRename((path) => {
 					path.extname = '.sass';
 				}))
-				.pipe(Gulp.dest(DEST_BUILD_PREP));
+				.pipe(Gulp.dest('temp'));
 		},
 
 		// _BUILD PREP SCSS
@@ -136,28 +154,37 @@ const _build = Gulp.series(
 				.pipe(gulpRename((path) => {
 					path.extname = '.scss';
 				}))
-				.pipe(Gulp.dest(DEST_BUILD_PREP));
+				.pipe(Gulp.dest('temp'));
 		},
 
 		// _BUILD PREP JS
 		function _build_prep_js() {
 			return Gulp.src('src/**/*.js', { since: Gulp.lastRun(_build_prep_js) })
-				.pipe(preProcessPipe())
-				.pipe(Gulp.dest(DEST_BUILD_PREP));
+				.pipe(gulpPreProcess({
+					context: PRE_PROCESS_CONTEXT,
+					extension: 'js'
+				}))
+				.pipe(Gulp.dest('temp'));
 		},
 
-		// _BUILD PREP ESM PREP
-		function _build_prep_esm_prep() {
-			return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(_build_prep_esm_prep) })
-				.pipe(preProcessPipeMjs())
-				.pipe(Gulp.dest(DEST_BUILD_PREP));
+		// _BUILD PREP ESM
+		function _build_prep_esm() {
+			return Gulp.src('src/**/*.mjs', { since: Gulp.lastRun(_build_prep_esm) })
+				.pipe(gulpPreProcess({
+					context: PRE_PROCESS_CONTEXT,
+					extension: 'js'
+				}))
+				.pipe(Gulp.dest('temp'));
 		},
 
 		// _BUILD PREP HTML
 		function _build_prep_html() {
 			return Gulp.src('src/**/*.html', { since: Gulp.lastRun(_build_prep_html) })
-				.pipe(preProcessPipe())
-				.pipe(Gulp.dest(DEST_BUILD_PREP));
+				.pipe(gulpPreProcess({
+					context: PRE_PROCESS_CONTEXT,
+					extension: 'html'
+				}))
+				.pipe(Gulp.dest('temp'));
 		}
 	),
 
@@ -165,62 +192,14 @@ const _build = Gulp.series(
 	Gulp.parallel(
 
 		// _BUILD NEXT APP
-		Gulp.series(
-
-			// _BUILD NEXT APP PREP
-			function _build_next_app_prep() {
-				return Gulp.src(Path.join(DEST_BUILD_PREP, 'app.html'))
-					.pipe(gulpUseRef({}, esmPipe))
-					.pipe(Gulp.dest(DEST_BUILD_MAIN));
-			},
-
-			// _BUILD NEXT APP COMPLETE
-			Gulp.parallel(
-
-				// _BUILD NEXT APP COMPLETE CSS
-				function _build_next_app_complete_css() {
-					let result = Gulp.src(Path.join(DEST_BUILD_MAIN, '**/*.css'))
-						.pipe(gulpAutoPrefixer());
-					if (MINIFY) {
-						result = result.pipe(gulpCleanCss());
-					}
-					return result
-						.pipe(Gulp.dest(DEST_DIST))
-						.pipe(gulpConnect.reload());
-				},
-
-				// _BUILD NEXT APP COMPLETE JS
-				function _build_next_app_complete_js() {
-					let result = Gulp.src(Path.join(DEST_BUILD_MAIN, '**/*.js'))
-						.pipe(gulpBabel());
-					if (MINIFY) {
-						result = result.pipe(gulpUglify());
-					}
-					return result
-						.pipe(Gulp.dest(DEST_DIST))
-						.pipe(gulpConnect.reload());
-				},
-
-				// _BUILD NEXT APP COMPLETE HTML
-				function _build_next_app_complete_html() {
-					let result = Gulp.src(Path.join(DEST_BUILD_MAIN, 'app.html'));
-					for (const file of APP_FILES) {
-						result = result.pipe(gulpRename((path) => {
-							path.extname = Path.extname(file);
-							path.basename = Path.basename(file, path.extname);
-							path.dirname = Path.dirname(file);
-						}));
-						if (MINIFY) {
-							result = result.pipe(gulpHtmlMin({ collapseWhitespace: true }));
-						}
-						result = result
-							.pipe(Gulp.dest(Path.join(DEST_DIST, APP_FOLDER)))
-							.pipe(gulpConnect.reload());
-					}
-					return result;
-				}
-			)
-		),
+		function _build_next_app() {
+			return Gulp.src(Path.join('temp', 'app.html'))
+				.pipe(gulpUseRef({}, esmPipe))
+				.pipe(gulpIf('*.css', cssPipe()))
+				.pipe(gulpIf('*.js', jsPipe()))
+				.pipe(gulpIf('*.html', htmlPipe()))
+				.pipe(gulpConnect.reload());
+		},
 
 		// _BUILD NEXT ASSET
 		Gulp.parallel(
@@ -228,7 +207,7 @@ const _build = Gulp.series(
 			// _BUILD NEXT ASSET SVG
 			function _build_next_asset_svg() {
 				return Gulp.src('src/**/*.svg')
-					.pipe(Gulp.dest(Path.join(DEST_DIST, APP_FOLDER)))
+					.pipe(Gulp.dest(Path.join('dist', APP_FOLDER)))
 					.pipe(gulpConnect.reload());
 			}
 		)
@@ -266,7 +245,7 @@ export const serve = Gulp.series(
 		return detectPort(9000)
 			.then((port) => {
 				gulpConnect.server({
-					root: DEST_DIST,
+					root: 'dist',
 					port,
 					livereload: true
 				});

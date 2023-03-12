@@ -5811,35 +5811,35 @@ console.log('Hello World');
 
   /******/
   var __webpack_modules__ = {
-    /***/"./temp_prep/scripts/app.mjs":
-    /*!***********************************!*\
-      !*** ./temp_prep/scripts/app.mjs ***!
-      \***********************************/
+    /***/"./temp/scripts/app.mjs":
+    /*!******************************!*\
+      !*** ./temp/scripts/app.mjs ***!
+      \******************************/
     /***/
-    function temp_prepScriptsAppMjs(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _partial_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./partial.mjs */ \"./temp_prep/scripts/partial.mjs\");\n/* global $ Backbone */\n\n// app.mjs\n\n\n\nconsole.log('Hello Galaxy', (0,_partial_mjs__WEBPACK_IMPORTED_MODULE_0__[\"default\"])());\n\n$(() => {\n\tconst $container = $('#app-container');\n\tconsole.log($container);\n\n\tnew Backbone.Router({\n\t\troutes: {\n\t\t\t['']() {\n\t\t\t\tconsole.log('INDEX');\n\t\t\t},\n\n\t\t\t['index.html']() {\n\t\t\t\tconsole.log('INDEX');\n\t\t\t},\n\n\t\t\t['about.html']() {\n\t\t\t\tconsole.log('ABOUT');\n\t\t\t},\n\n\t\t\t['*Others']() {\n\t\t\t\tconsole.log('OTHERS');\n\t\t\t}\n\t\t}\n\t});\n\n\tBackbone.history.start({\n\t\tpushState: true,\n\t\troot: 'webapp/spa-boilerplate'\n\t});\n});\n\n\n//# sourceURL=webpack://spa-boilerplate/./temp_prep/scripts/app.mjs?");
+    function tempScriptsAppMjs(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _partial_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./partial.mjs */ \"./temp/scripts/partial.mjs\");\n/* global $ Backbone */\n\n// app.mjs\n\n\n\nconsole.log('Hello Galaxy', (0,_partial_mjs__WEBPACK_IMPORTED_MODULE_0__[\"default\"])());\n\n$(() => {\n\tconst $container = $('#app-container');\n\tconsole.log($container);\n\n\tnew Backbone.Router({\n\t\troutes: {\n\t\t\t['']() {\n\t\t\t\tconsole.log('INDEX');\n\t\t\t},\n\n\t\t\t['index.html']() {\n\t\t\t\tconsole.log('INDEX');\n\t\t\t},\n\n\t\t\t['about.html']() {\n\t\t\t\tconsole.log('ABOUT');\n\t\t\t},\n\n\t\t\t['*Others']() {\n\t\t\t\tconsole.log('OTHERS');\n\t\t\t}\n\t\t}\n\t});\n\n\tBackbone.history.start({\n\t\tpushState: true,\n\t\troot: 'webapp/spa-boilerplate'\n\t});\n});\n\n\n//# sourceURL=webpack://spa-boilerplate/./temp/scripts/app.mjs?");
 
       /***/
     },
 
-    /***/"./temp_prep/scripts/entry.mjs":
-    /*!*************************************!*\
-      !*** ./temp_prep/scripts/entry.mjs ***!
-      \*************************************/
+    /***/"./temp/scripts/entry.mjs":
+    /*!********************************!*\
+      !*** ./temp/scripts/entry.mjs ***!
+      \********************************/
     /***/
-    function temp_prepScriptsEntryMjs(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _partial_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./partial.mjs */ \"./temp_prep/scripts/partial.mjs\");\n// esm-main.mjs\n\n\n\nconsole.log((0,_partial_mjs__WEBPACK_IMPORTED_MODULE_0__[\"default\"])());\n\n\n//# sourceURL=webpack://spa-boilerplate/./temp_prep/scripts/entry.mjs?");
+    function tempScriptsEntryMjs(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _partial_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./partial.mjs */ \"./temp/scripts/partial.mjs\");\n// esm-main.mjs\n\n\n\nconsole.log((0,_partial_mjs__WEBPACK_IMPORTED_MODULE_0__[\"default\"])());\n\n\n//# sourceURL=webpack://spa-boilerplate/./temp/scripts/entry.mjs?");
 
       /***/
     },
 
-    /***/"./temp_prep/scripts/partial.mjs":
-    /*!***************************************!*\
-      !*** ./temp_prep/scripts/partial.mjs ***!
-      \***************************************/
+    /***/"./temp/scripts/partial.mjs":
+    /*!**********************************!*\
+      !*** ./temp/scripts/partial.mjs ***!
+      \**********************************/
     /***/
-    function temp_prepScriptsPartialMjs(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ getMessage)\n/* harmony export */ });\n// esm-partial.mjs\n\nfunction getMessage() {\n\treturn 'Hello Universe';\n}\n\n\n//# sourceURL=webpack://spa-boilerplate/./temp_prep/scripts/partial.mjs?");
+    function tempScriptsPartialMjs(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ getMessage)\n/* harmony export */ });\n// esm-partial.mjs\n\nfunction getMessage() {\n\treturn 'Hello Universe';\n}\n\n\n//# sourceURL=webpack://spa-boilerplate/./temp/scripts/partial.mjs?");
 
       /***/
     }
@@ -5936,9 +5936,9 @@ console.log('Hello World');
   /******/ // Load entry module and return exports
   /******/ // This entry module can't be inlined because the eval devtool is used.
   /******/
-  __webpack_require__("./temp_prep/scripts/entry.mjs");
+  __webpack_require__("./temp/scripts/entry.mjs");
   /******/
-  var __webpack_exports__ = __webpack_require__("./temp_prep/scripts/app.mjs");
+  var __webpack_exports__ = __webpack_require__("./temp/scripts/app.mjs");
   /******/
   /******/
 })();

@@ -8,7 +8,7 @@
     "ignorePatterns": [
         "dist/*",
         "temp_next/*",
-        "temp_prep/*"
+        "temp/*"
     ],
     "overrides": [
         {
