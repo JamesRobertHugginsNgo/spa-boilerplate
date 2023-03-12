@@ -77,14 +77,16 @@ const esmPipe = lazyPipe()
 		}));
 	});
 
+const minifyCode = process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD';
+
 let cssPipe = lazyPipe().pipe(gulpAutoPrefixer);
-if (process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD') {
+if (minifyCode) {
 	cssPipe = cssPipe.pipe(gulpCleanCss);
 }
 cssPipe = cssPipe.pipe(Gulp.dest, 'dist/');
 
 let jsPipe = lazyPipe().pipe(gulpBabel);
-if (process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD') {
+if (minifyCode) {
 	jsPipe = jsPipe.pipe(gulpUglify);
 }
 jsPipe = jsPipe.pipe(Gulp.dest, 'dist/');
@@ -96,7 +98,7 @@ for (const file of APP_FILES) {
 		path.basename = Path.basename(file, path.extname);
 		path.dirname = Path.dirname(file);
 	});
-	if (process.env.BUILD_ENV === 'QA' || process.env.BUILD_ENV === 'PROD') {
+	if (minifyCode) {
 		htmlPipe = htmlPipe.pipe(gulpHtmlMin, { collapseWhitespace: true });
 	}
 	htmlPipe = htmlPipe.pipe(Gulp.dest, Path.join('dist/', APP_FOLDER));
