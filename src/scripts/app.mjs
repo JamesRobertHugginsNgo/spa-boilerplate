@@ -6,32 +6,34 @@ import getMessage from "./partial.mjs";
 
 console.log('Hello Galaxy', getMessage());
 
-$(() => {
-	const $container = $('#app-container');
-	console.log($container);
+console.log(document.location);
 
-	new Backbone.Router({
-		routes: {
-			['']() {
-				console.log('INDEX');
-			},
+const $container = $('#app-container');
+new Backbone.Router({
+	routes: {
+		['index.html']() {
+			console.log('INDEX');
+			$container.html(`
+				<h1>Index</h1>
+			`);
+		},
 
-			['index.html']() {
-				console.log('INDEX');
-			},
+		['about.html']() {
+			console.log('ABOUT');
+			$container.html(`
+				<h1>About</h1>
+			`);
+		},
 
-			['about.html']() {
-				console.log('ABOUT');
-			},
-
-			['*Others']() {
-				console.log('OTHERS');
-			}
+		['*Others']() {
+			console.log('OTHER');
+			this.navigate('index.html', { trigger: true });
 		}
-	});
-
-	Backbone.history.start({
-		pushState: true,
-		root: '/* @echo APP_FOLDER */'
-	});
+	}
 });
+
+Backbone.history.start({
+	pushState: true,
+	root: '/* @echo APP_FOLDER */'
+});
+
