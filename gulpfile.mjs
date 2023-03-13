@@ -4,7 +4,7 @@ import Gulp from 'gulp';
 import gulpAutoPrefixer from 'gulp-autoprefixer';
 import gulpBabel from 'gulp-babel';
 import gulpCleanCss from 'gulp-clean-css';
-import gulpConnect from 'gulp-connect';
+import connect from 'gulp-connect';
 import gulpDependents from 'gulp-dependents';
 import gulpHtmlMin from 'gulp-htmlmin';
 import gulpIf from 'gulp-if';
@@ -189,8 +189,7 @@ const _build = Gulp.series(
 				.pipe(gulpUseRef({}, esmPipe))
 				.pipe(gulpIf('*.css', cssPipe()))
 				.pipe(gulpIf('*.js', jsPipe()))
-				.pipe(gulpIf('*.html', htmlPipe()))
-				.pipe(gulpConnect.reload());
+				.pipe(gulpIf('*.html', htmlPipe()));
 		},
 
 		// _BUILD NEXT ASSET
@@ -198,9 +197,8 @@ const _build = Gulp.series(
 
 			// _BUILD NEXT ASSET SVG
 			function _build_next_asset_svg() {
-				return Gulp.src('src/**/*.svg')
-					.pipe(Gulp.dest(Path.join('dist/', APP_FOLDER)))
-					.pipe(gulpConnect.reload());
+				return Gulp.src('src/**/*.svg', { since: Gulp.lastRun(_build_next_asset_svg) })
+					.pipe(Gulp.dest(Path.join('dist/', APP_FOLDER)));
 			}
 		)
 	)
@@ -212,7 +210,7 @@ export const build = Gulp.series(clean, _build);
 ////////////////////////////////////////////////////////////////////////////////
 
 // WATCH APP
-function _watch() {
+function _watch(callback) {
 	Gulp.watch([
 		'src/**/*.css',
 		'src/**/*.sass',
@@ -221,6 +219,7 @@ function _watch() {
 		'src/**/*.mjs',
 		'src/**/*.html'
 	], _build);
+	callback();
 }
 
 // WATCH
@@ -234,20 +233,31 @@ export const serve = Gulp.series(
 	_build,
 
 	// SERVE APP
-	function _serve() {
+	function _serve(callback) {
 		return detectPort(9000)
 			.then((port) => {
-				gulpConnect.server({
+				connect.server({
 					root: 'dist/',
 					port,
 					livereload: true
+				}, function () {
+					this.server.on('close', () => {
+						callback();
+					});
 				});
 
 				open(`http://localhost:${port}/${Path.join(APP_FOLDER, APP_FILES[0])}`);
 			});
 	},
 
-	_watch
+	_watch,
+
+	function _watch_reload(callback) {
+		Gulp.watch('dist/**/*').on('change', (file) => {
+			return Gulp.src(file, { read: false }).pipe(connect.reload());
+		});
+		callback();
+	}
 );
 
 ////////////////////////////////////////////////////////////////////////////////
