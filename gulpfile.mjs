@@ -185,7 +185,7 @@ const _build = Gulp.series(
 
 		// _BUILD NEXT APP
 		function _build_next_app() {
-			return Gulp.src(Path.join('temp/', 'app.html'))
+			return Gulp.src('temp/app.html')
 				.pipe(gulpUseRef({}, esmPipe))
 				.pipe(gulpIf('*.css', cssPipe()))
 				.pipe(gulpIf('*.js', jsPipe()))
@@ -209,7 +209,7 @@ export const build = Gulp.series(clean, _build);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// WATCH APP
+// _WATCH
 function _watch(callback) {
 	Gulp.watch([
 		'src/**/*.css',
@@ -232,7 +232,7 @@ export const serve = Gulp.series(
 	clean,
 	_build,
 
-	// SERVE APP
+	// _SERVE
 	function _serve(callback) {
 		return detectPort(9000)
 			.then((port) => {
@@ -252,7 +252,8 @@ export const serve = Gulp.series(
 
 	_watch,
 
-	function _watch_reload(callback) {
+	// _WATCH SERVE RELOAD
+	function _watch_serve_reload(callback) {
 		Gulp.watch('dist/**/*').on('change', (file) => {
 			return Gulp.src(file, { read: false }).pipe(connect.reload());
 		});
